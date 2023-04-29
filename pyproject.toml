@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "mtg-rules-chatgpt-plugin"
+version = "0.1.0"
+description = ""
+authors = ["Trevor Strieber <trevor@strieber.org>"]
+readme = "README.md"
+packages = [{include = "mtg_rules_chatgpt_plugin"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+chromadb = "^0.3.21"
+fastapi = "^0.95.1"
+uvicorn = {extras = ["standard"], version = "^0.22.0"}
+black = "^23.3.0"
+isort = "^5.12.0"
+
+[tool.poetry.scripts]
+start = "mtg_rules_chatgpt_plugin.main:start"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

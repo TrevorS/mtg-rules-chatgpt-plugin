@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+.chroma/
+mtg_rules_chatgpt_plugin/data/
