@@ -1,14 +1,19 @@
+from dotenv import load_dotenv  # noqa
+
+load_dotenv()  # noqa
+
 import csv
 import datetime
-import os
-import uuid
 import sqlite3
+import uuid
 
 import chromadb
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+
+from . import config
 
 
 def get_app():
@@ -29,9 +34,9 @@ def get_app():
     return app
 
 
-def get_cards_db(
-        cards_path="mtg_rules_chatgpt_plugin/data/AllPrintings.sqlite",
-):
+def get_cards_db():
+    cards_path = config.get_cards_db_path()
+
     # log loading cards
     print(f"Loading cards from {cards_path}")
 
@@ -39,9 +44,9 @@ def get_cards_db(
     return sqlite3.connect(cards_path)
 
 
-def get_rules_db(
-    rules_path="mtg_rules_chatgpt_plugin/data/magic-rules-2023-04-14.csv",
-):
+def get_rules_db():
+    rules_path = config.get_rules_csv_path()
+
     # log loading rules
     print(f"Loading rules from {rules_path}")
 
@@ -165,24 +170,10 @@ def get_ai_plugin():
     return FileResponse("mtg_rules_chatgpt_plugin/data/ai-plugin.json")
 
 
-def get_host():
-    return os.getenv("HOST", "localhost")
-
-
-def get_port():
-    return os.getenv("PORT", 5003)
-
-
-def get_env():
-    return os.getenv("ENV", "LOCAL")
-
-
 def start():
-    dev_mode = get_env() == "LOCAL"
-
     uvicorn.run(
         "mtg_rules_chatgpt_plugin.main:app",
-        host=get_host(),
-        port=get_port(),
-        reload=dev_mode,
+        host=config.get_host(),
+        port=config.get_port(),
+        reload=config.is_dev_mode(),
     )
