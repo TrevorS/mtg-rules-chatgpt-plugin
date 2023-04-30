@@ -92,6 +92,8 @@ def find_by_name(cards_db: Connection, name: str) -> Card | None:
             cards
         WHERE
             name = ?
+        COLLATE
+            NOCASE;
         """,
         (name,),
     )
