@@ -14,6 +14,8 @@ class Card(BaseModel):
     manaCost: str | None
     manaValue: float | None
     power: str | None
+    scryfall_id: str | None
+    scryfall_uri: str | None
     setCode: str | None
     text: str | None
     toughness: str | None
@@ -29,6 +31,8 @@ class Card(BaseModel):
                 "loyalty": None,
                 "manaCost": "{2}{B}{B}",
                 "manaValue": "4",
+                "scryfall_id": "26c68473-70ca-40ba-b5c6-71ec30f88a2c",
+                "scryfall_uri": "https://scryfall.com/card/plc/85/damnation?utm_source=api",  # noqa
                 "setCode": "PLC",
                 "text": "Destroy all creatures. They can’t be regenerated.",
                 "toughness": None,
@@ -47,11 +51,13 @@ class Card(BaseModel):
             manaCost=row[4],
             manaValue=row[5],
             power=row[6],
-            setCode=row[7],
-            text=row[8],
-            toughness=row[9],
-            types=row[10],
-            uuid=row[11],
+            scryfall_id=row[7],
+            scryfall_uri=None,
+            setCode=row[8],
+            text=row[9],
+            toughness=row[10],
+            types=row[11],
+            uuid=row[12],
         )
 
 
@@ -76,6 +82,7 @@ def find_by_name(cards_db: Connection, name: str) -> Card | None:
             manaCost,
             manaValue,
             power,
+            scryfallId,
             setCode,
             text,
             toughness,

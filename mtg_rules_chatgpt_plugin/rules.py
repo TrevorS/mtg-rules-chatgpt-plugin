@@ -11,25 +11,28 @@ from . import config
 
 
 class Rule(BaseModel):
-    title: str
-    text: str
+    distance: float
     number: str
+    text: str
+    title: str
 
     class Config:
         schema_extra = {
             "example": {
-                "title": "General",
+                "distance": 1.42,
                 "number": "100.1.",
                 "text": "These Magic rules apply to any Magic game with two or more players, including two-player games and multiplayer games.",  # noqa
+                "title": "General",
             }
         }
 
     @staticmethod
-    def from_row(row: dict) -> "Rule":
+    def from_row(row: dict, distance: float) -> "Rule":
         return Rule(
-            title=row["title"],
-            text=row["text"],
+            distance=distance,
             number=row["number"],
+            text=row["text"],
+            title=row["title"],
         )
 
 
@@ -94,8 +97,10 @@ def query_rules(
     )
 
     try:
-        rows = rules["metadatas"][0]
+        rows, distances = rules["metadatas"][0], rules["distances"][0]
     except IndexError:
-        rows = []
+        rows, distances = [], []
 
-    return [Rule.from_row(row) for row in rows]
+    return [
+        Rule.from_row(row, distance) for row, distance in zip(rows, distances)
+    ]  # noqa

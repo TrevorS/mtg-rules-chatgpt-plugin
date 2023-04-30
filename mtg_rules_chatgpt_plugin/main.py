@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from . import cards, config, rules, types
+from . import cards, config, rules, scryfall, types
 
 
 def get_app() -> FastAPI:
@@ -42,7 +42,7 @@ rules_db, app, start_time = (
 print(f"Started: {start_time}")
 
 
-@app.get("/", summary="Status")
+@app.get("/", summary="Status", include_in_schema=False)
 def read_root() -> types.RootResponse:
     """Returns the status of the API."""
     return {
@@ -63,10 +63,14 @@ def query_rules(q: str) -> types.RulesResponse:
 @app.get("/card")
 def find_card(name: str) -> types.CardResponse:
     """Accepts a Magic: The Gathering card name. Returns relevant card information as a result."""  # noqa
-    return cards.find_by_name(
-        cards.get_cards_db(),
-        name,
-    )
+    card = cards.find_by_name(cards.get_cards_db(), name)
+
+    if card is None:
+        return None
+
+    card.scryfall_uri = scryfall.get_uri(card.scryfall_id)
+
+    return card
 
 
 @app.get("/logo.png")
