@@ -15,6 +15,23 @@ class Rule(BaseModel):
     text: str
     number: str
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "title": "General",
+                "number": "100.1.",
+                "text": "These Magic rules apply to any Magic game with two or more players, including two-player games and multiplayer games.",  # noqa
+            }
+        }
+
+    @staticmethod
+    def from_row(row: dict) -> "Rule":
+        return Rule(
+            title=row["title"],
+            text=row["text"],
+            number=row["number"],
+        )
+
 
 def get_rules_db() -> Collection:
     # create db or load existing rules vectorstore
@@ -77,16 +94,8 @@ def query_rules(
     )
 
     try:
-        rules = rules["metadatas"][0]
+        rows = rules["metadatas"][0]
     except IndexError:
-        rules = []
+        rows = []
 
-    return [row_to_rule(rule) for rule in rules]
-
-
-def row_to_rule(row: dict) -> Rule:
-    return Rule(
-        title=row["title"],
-        text=row["text"],
-        number=row["number"],
-    )
+    return [Rule.from_row(row) for row in rows]

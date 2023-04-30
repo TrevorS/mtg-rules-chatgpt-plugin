@@ -2,21 +2,24 @@ from dotenv import load_dotenv  # noqa
 
 load_dotenv()  # noqa
 
-from typing import List
 
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from . import cards, config, rules
+from . import cards, config, rules, types
 
 
 def get_app() -> FastAPI:
     # log starting api
     print("Starting api")
 
-    app = FastAPI()
+    app = FastAPI(
+        title="Unofficial Magic: The Gathering ChatGPT Plugin",
+        description="An unofficial plugin for the OpenAI ChatGPT API that provides Magic: The Gathering rules and card information.",  # noqa
+        version="0.1.0",
+    )
 
     # add cors for chat.openai.com
     app.add_middleware(
@@ -39,34 +42,27 @@ rules_db, app, start_time = (
 print(f"Started: {start_time}")
 
 
-@app.get("/")
-def read_root():
+@app.get("/", summary="Status")
+def read_root() -> types.RootResponse:
+    """Returns the status of the API."""
     return {
         "status": "ok",
         "started_at": start_time.isoformat(),
     }
 
 
-@app.get(
-    "/rules",
-    description="""
-    Accepts a search query in the form of a snippet of Magic: The Gathering rules text. Returns relevant rules as a result.
-    """,  # noqa
-)
-def query_rules(q: str) -> List[rules.Rule]:
+@app.get("/rules")
+def query_rules(q: str) -> types.RulesResponse:
+    """Accepts a search query in the form of a snippet of Magic: The Gathering rules text. Returns relevant rules as a result."""  # noqa
     return rules.query_rules(
         rules_db,
         q,
     )
 
 
-@app.get(
-    "/card",
-    description="""
-    Accepts a Magic: The Gathering card name. Returns relevant card information as a result.
-    """,  # noqa
-)
-def find_card(name: str) -> cards.Card | None:
+@app.get("/card")
+def find_card(name: str) -> types.CardResponse:
+    """Accepts a Magic: The Gathering card name. Returns relevant card information as a result."""  # noqa
     return cards.find_by_name(
         cards.get_cards_db(),
         name,

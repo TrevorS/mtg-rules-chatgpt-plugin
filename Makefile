@@ -11,3 +11,6 @@ format:
 
 check:
 	@poetry run mypy --ignore-missing-imports mtg_rules_chatgpt_plugin
+
+cards_db:
+	@sqlite3 mtg_rules_chatgpt_plugin/data/db/cards/AllPrintings.sqlite
