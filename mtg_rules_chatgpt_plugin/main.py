@@ -2,21 +2,17 @@ from dotenv import load_dotenv  # noqa
 
 load_dotenv()  # noqa
 
-import csv
-import datetime
-import sqlite3
-import uuid
+from typing import List
 
-import chromadb
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from . import config
+from . import cards, config, rules
 
 
-def get_app():
+def get_app() -> FastAPI:
     # log starting api
     print("Starting api")
 
@@ -34,130 +30,47 @@ def get_app():
     return app
 
 
-def get_cards_db():
-    cards_path = config.get_cards_db_path()
-
-    # log loading cards
-    print(f"Loading cards from {cards_path}")
-
-    # load sqlite database
-    return sqlite3.connect(cards_path)
-
-
-def get_rules_db():
-    rules_path = config.get_rules_csv_path()
-
-    # log loading rules
-    print(f"Loading rules from {rules_path}")
-
-    # load rules as csv
-    with open(rules_path, newline="") as rules_file:
-        reader = csv.DictReader(rules_file)
-        documents = list(reader)
-
-    # create db
-    client = chromadb.Client()
-
-    # log creating collection
-    print("Creating collection")
-    collection = client.create_collection("rules")
-
-    # log adding documents
-    print("Adding documents")
-    # add documents to collection
-    collection.add(
-        documents=[
-            # join all fields into one text
-            "|".join(doc.values())
-            for doc in documents
-        ],
-        # add all fields as metadata
-        metadatas=documents,
-        ids=[
-            # generate uuids for each document
-            uuid.uuid4().hex
-            for _ in documents
-        ],
-    )
-
-    # log done
-    print("Done")
-    return collection
-
-
 # start app
-rules_db, app, start_time = get_rules_db(), get_app(), datetime.datetime.now()
+rules_db, app, start_time = (
+    rules.get_rules_db(),
+    get_app(),
+    config.get_current_datetime(),
+)
 print(f"Started: {start_time}")
 
 
 @app.get("/")
 def read_root():
-    return {"status": "ok"}
-
-
-@app.get("/rules")
-def query_rules(q: str):
-    """
-    Query an up to date edition of the Magic: The Gathering rules database for a given query string.
-    """  # noqa
-    matches = rules_db.query(
-        query_texts=[q],
-        n_results=5,
-    )
-
-    try:
-        matches = matches["documents"][0]
-    except IndexError:
-        matches = []
-
-    return {"matches": matches}
-
-
-@app.get("/card")
-def query_cards(q: str):
-    """
-    Query an up to date edition of the Magic: The Gathering cards database by exact card name.
-    """  # noqa
-    cards_db = get_cards_db()
-
-    results = cards_db.execute(
-        """
-            SELECT
-                artist,
-                colors,
-                keywords,
-                loyalty,
-                manaCost,
-                manaValue,
-                setCode,
-                types,
-                text,
-                toughness
-            FROM
-                cards
-            WHERE
-                name = ?
-            """,
-        (q,),
-    )
-
-    card = results.fetchone()
-
-    # return card formatted as dict
     return {
-        "match": {
-            "artist": card[0],
-            "colors": card[1],
-            "keywords": card[2],
-            "loyalty": card[3],
-            "manaCost": card[4],
-            "manaValue": card[5],
-            "setCode": card[6],
-            "types": card[7],
-            "text": card[8],
-            "toughness": card[9],
-        },
+        "status": "ok",
+        "started_at": start_time.isoformat(),
     }
+
+
+@app.get(
+    "/rules",
+    description="""
+    Accepts a search query in the form of a snippet of Magic: The Gathering rules text. Returns relevant rules as a result.
+    """,  # noqa
+)
+def query_rules(q: str) -> List[rules.Rule]:
+    return rules.query_rules(
+        rules_db,
+        q,
+    )
+
+
+@app.get(
+    "/card",
+    description="""
+    Accepts a Magic: The Gathering card name. Returns relevant card information as a result.
+    """,  # noqa
+)
+def find_card(name: str) -> cards.Card | None:
+    return cards.find_by_name(
+        cards.get_cards_db(),
+        name,
+    )
 
 
 @app.get("/logo.png")
