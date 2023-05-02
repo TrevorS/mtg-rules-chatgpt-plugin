@@ -18,6 +18,8 @@ ipdb = "^0.13.13"
 mypy = "^1.2.0"
 requests = "^2.29.0"
 types-requests = "^2.29.0.0"
+databases = {extras = ["aiosqlite"], version = "^0.7.0"}
+sqlalchemy-stubs = "^0.4"
 
 [tool.poetry.scripts]
 start = "mtg_rules_chatgpt_plugin.main:start"

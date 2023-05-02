@@ -7,8 +7,9 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 
-from . import cards, config, rules, scryfall, types
+from . import config, models, rules, schema, types
 
 
 def get_app() -> FastAPI:
@@ -54,21 +55,29 @@ def read_root() -> types.RootResponse:
 @app.get("/rules")
 def query_rules(q: str) -> types.RulesResponse:
     """Accepts a search query in the form of a snippet of Magic: The Gathering rules text. Returns relevant rules as a result."""  # noqa
-    return rules.query_rules(
+    results = rules.query_rules(
         rules_db,
         q,
     )
+
+    return [schema.Rule.from_record(result) for result in results]
 
 
 @app.get("/card")
 def find_card(name: str) -> types.CardResponse:
     """Accepts a Magic: The Gathering card name. Returns relevant card information as a result."""  # noqa
-    card = cards.find_by_name(cards.get_cards_db(), name)
+    stmt = (
+        select(
+            models.Card.__table__.columns,
+        )
+        .where(models.Card.name.ilike(name))
+        .limit(1)
+    )
 
-    if card is None:
-        return None
+    with models.SessionLocal() as session:
+        card = session.execute(stmt).first()
 
-    card.scryfall_uri = scryfall.get_uri(card.scryfall_id)
+    card = schema.Card.from_record(card) if card else None
 
     return card
 

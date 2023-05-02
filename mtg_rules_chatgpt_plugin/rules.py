@@ -1,33 +1,24 @@
 import csv
 import uuid
+from dataclasses import dataclass
 from typing import List
 
 import chromadb
 from chromadb.api.models.Collection import Collection
 from chromadb.config import Settings
-from pydantic import BaseModel
 
 from . import config
 
 
-class Rule(BaseModel):
+@dataclass
+class Rule:
     distance: float
     number: str
     text: str
     title: str
 
-    class Config:
-        schema_extra = {
-            "example": {
-                "distance": 1.42,
-                "number": "100.1.",
-                "text": "These Magic rules apply to any Magic game with two or more players, including two-player games and multiplayer games.",  # noqa
-                "title": "General",
-            }
-        }
-
     @staticmethod
-    def from_row(row: dict, distance: float) -> "Rule":
+    def from_vector_store(row, distance) -> "Rule":
         return Rule(
             distance=distance,
             number=row["number"],
@@ -102,5 +93,9 @@ def query_rules(
         rows, distances = [], []
 
     return [
-        Rule.from_row(row, distance) for row, distance in zip(rows, distances)
-    ]  # noqa
+        Rule.from_vector_store(
+            row,
+            distance,
+        )
+        for row, distance in zip(rows, distances)
+    ]
