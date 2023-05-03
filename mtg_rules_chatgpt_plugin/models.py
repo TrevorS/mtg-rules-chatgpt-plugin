@@ -1,42 +1,67 @@
-from sqlalchemy import Column, Float, String, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+import databases
+import sqlalchemy
+from sqlalchemy import Column, Float, String, select
 
 from . import config
 
-engine = create_engine(
-    f"sqlite:///{config.get_cards_db_path()}",
-    connect_args={
-        "check_same_thread": False,
-    },
+database = databases.Database(f"sqlite:///{config.get_cards_db_path()}")
+metadata = sqlalchemy.MetaData()
+
+cards = sqlalchemy.Table(
+    "cards",
+    metadata,
+    Column("artist", String, nullable=True),
+    Column("colors", String, nullable=True),
+    Column("keywords", String, nullable=True),
+    Column("loyalty", String, nullable=True),
+    Column("manaCost", String, nullable=True),
+    Column("manaValue", Float, nullable=True),
+    Column("name", String, nullable=True),
+    Column("power", String, nullable=True),
+    Column("scryfallId", String, nullable=True),
+    Column("setCode", String, nullable=True),
+    Column("text", String, nullable=True),
+    Column("toughness", String, nullable=True),
+    Column("types", String, nullable=True),
+    Column("uuid", String, primary_key=True),
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=engine,
-)
 
-Base = declarative_base()
+def build_card_query(
+    artist: str | None = None,
+    colors: str | None = None,
+    keywords: str | None = None,
+    loyalty: str | None = None,
+    mana_cost: str | None = None,
+    mana_value: float | None = None,
+    name: str | None = None,
+    power: str | None = None,
+    scryfall_id: str | None = None,
+    set_code: str | None = None,
+    text: str | None = None,
+    toughness: str | None = None,
+    types: str | None = None,
+    uuid: str | None = None,
+) -> select:
+    stmt = select(cards.c)
 
+    for column, value in (
+        ("artist", artist),
+        ("colors", colors),
+        ("keywords", keywords),
+        ("loyalty", loyalty),
+        ("manaCost", mana_cost),
+        ("manaValue", mana_value),
+        ("name", name),
+        ("power", power),
+        ("scryfallId", scryfall_id),
+        ("setCode", set_code),
+        ("text", text),
+        ("toughness", toughness),
+        ("types", types),
+        ("uuid", uuid),
+    ):
+        if value:
+            stmt = stmt.where(getattr(cards.c, column) == value)
 
-class BaseType(Base):
-    __abstract__ = True
-
-
-class Card(BaseType):
-    __tablename__ = "cards"
-    artist = Column(String, nullable=True)
-    colors = Column(String, nullable=True)
-    keywords = Column(String, nullable=True)
-    loyalty = Column(String, nullable=True)
-    manaCost = Column(String, nullable=True)
-    manaValue = Column(Float, nullable=True)
-    name = Column(String(collation="NOCASE"), nullable=True)
-    power = Column(String, nullable=True)
-    scryfallId = Column(String, nullable=True)
-    setCode = Column(String, nullable=True)
-    text = Column(String, nullable=True)
-    toughness = Column(String, nullable=True)
-    types = Column(String, nullable=True)
-    uuid = Column(String, primary_key=True)
+    return stmt

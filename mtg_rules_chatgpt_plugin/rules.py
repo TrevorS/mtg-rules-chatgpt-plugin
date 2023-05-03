@@ -1,6 +1,6 @@
 import csv
 import uuid
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from typing import List
 
 import chromadb
@@ -25,6 +25,9 @@ class Rule:
             text=row["text"],
             title=row["title"],
         )
+
+    def dict(self) -> dict:
+        return asdict(self)
 
 
 def get_rules_db() -> Collection:

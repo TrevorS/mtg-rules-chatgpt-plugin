@@ -4,6 +4,7 @@ BASE_URL = "https://api.scryfall.com"
 
 
 def get_uri(scryfall_uuid) -> str | None:
+    print(f"getting uri for {scryfall_uuid}")
     card = get_card_by_id(scryfall_uuid)
 
     if card is None:
