@@ -1,6 +1,7 @@
-from dotenv import load_dotenv  # noqa
+# ruff: noqa: E402
+from dotenv import load_dotenv  # noqa: E402
 
-load_dotenv()  # noqa
+load_dotenv()  # noqa: E402
 
 import uuid
 

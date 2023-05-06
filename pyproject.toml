@@ -20,6 +20,7 @@ requests = "^2.29.0"
 types-requests = "^2.29.0.0"
 databases = {extras = ["aiosqlite"], version = "^0.7.0"}
 sqlalchemy-stubs = "^0.4"
+ruff = "^0.0.265"
 
 [tool.poetry.scripts]
 start = "mtg_rules_chatgpt_plugin.main:start"
@@ -30,3 +31,48 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.isort]
 profile = "black"
+
+[tool.black]
+line-length = 100
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.tox
+  | \.venv
+  | __pycache__
+  | build
+  | dist
+)/
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+  ".venv",
+]
+
+[tool.ruff.flake8-quotes]
+docstring-quotes = "double"

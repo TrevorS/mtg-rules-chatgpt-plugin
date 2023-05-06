@@ -10,12 +10,17 @@ def get_uri(scryfall_uuid) -> str | None:
     if card is None:
         return None
 
-    return card["scryfall_uri"]
+    uri = card["scryfall_uri"]
+
+    if uri is None:
+        return None
+
+    return str(uri)
 
 
 def get_card_by_id(id) -> dict | None:
     try:
-        return requests.get(f"{BASE_URL}/cards/{id}").json()
+        return dict(requests.get(f"{BASE_URL}/cards/{id}").json())
     except Exception as e:
         print(f"ran into error getting scryfall results for id: {id} / {e}")
         return None
