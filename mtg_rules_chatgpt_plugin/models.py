@@ -27,6 +27,10 @@ cards = sqlalchemy.Table(
 )
 
 
+def get_random_card() -> select:
+    return select(cards.c).order_by(sqlalchemy.func.random()).limit(1)
+
+
 def build_card_query(
     artist: str | None = None,
     colors: str | None = None,

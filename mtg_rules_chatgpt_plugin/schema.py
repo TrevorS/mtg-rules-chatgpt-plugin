@@ -17,6 +17,7 @@ class Card(BaseModel):
     loyalty: str | None
     manaCost: str | None
     manaValue: float | None
+    name: str | None
     power: str | None
     scryfall_id: str | None
     setCode: str | None
@@ -35,6 +36,7 @@ class Card(BaseModel):
                 "loyalty": None,
                 "manaCost": "{2}{B}{B}",
                 "manaValue": "4",
+                "name": "Damnation",
                 "scryfall_id": "26c68473-70ca-40ba-b5c6-71ec30f88a2c",
                 "setCode": "PLC",
                 "text": "Destroy all creatures. They can’t be regenerated.",

@@ -6,7 +6,7 @@ load_dotenv()  # noqa: E402
 import uuid
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
@@ -76,7 +76,7 @@ def query_rules(q: str) -> types.RulesResponse:
 
 @app.get(
     "/cards",
-    summary="Query cards by parameters.",
+    summary="Query cards by exact parameters.",
 )
 async def query_cards(
     artist: str | None = None,
@@ -151,6 +151,46 @@ async def get_scryfall_uri(uuid: uuid.UUID):
     scryfall_uri = scryfall_uri.split("?")[0]
 
     return {"scryfall_uri": scryfall_uri}
+
+
+@app.get(
+    "/fuzzy",
+    summary="Get card by fuzzy search on card name.",
+)
+async def get_fuzzy_card_name(card_name: str):
+    """Accepts a card name and returns the card with the closest name."""
+    scryfall_card = scryfall.get_card_by_fuzzy_name(card_name)
+
+    if scryfall_card is None:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    if scryfall_card["object"] == "error":
+        raise HTTPException(status_code=400, detail=scryfall_card["details"])
+
+    stmt = models.build_card_query(scryfall_id=scryfall_card["id"])
+
+    card = await models.database.fetch_one(stmt)
+
+    if card is None:
+        raise HTTPException(status_code=404, detail="Card not found")
+
+    return schema.Card(**dict(card))
+
+
+@app.get(
+    "/random",
+    summary="Get a random card",
+)
+async def get_random_card():
+    """Returns a random card"""
+    stmt = models.get_random_card()
+
+    card = await models.database.fetch_one(stmt)
+
+    if card is None:
+        raise HTTPException(status_code=500, detail="Something went wrong")
+
+    return schema.Card(**dict(card))
 
 
 @app.get("/logo.png")

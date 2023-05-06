@@ -3,7 +3,7 @@ import requests
 BASE_URL = "https://api.scryfall.com"
 
 
-def get_uri(scryfall_uuid) -> str | None:
+def get_uri(scryfall_uuid: str) -> str | None:
     print(f"getting uri for {scryfall_uuid}")
     card = get_card_by_id(scryfall_uuid)
 
@@ -18,9 +18,23 @@ def get_uri(scryfall_uuid) -> str | None:
     return str(uri)
 
 
-def get_card_by_id(id) -> dict | None:
+def get_card_by_id(id: str) -> dict | None:
+    print(f"getting card by id: {id}")
     try:
         return dict(requests.get(f"{BASE_URL}/cards/{id}").json())
     except Exception as e:
-        print(f"ran into error getting scryfall results for id: {id} / {e}")
+        print(
+            f"ran into error getting scryfall results for id: {id} / {e}",
+        )
+        return None
+
+
+def get_card_by_fuzzy_name(name: str) -> dict | None:
+    print(f"getting card by fuzzy name: {name}")
+    try:
+        return dict(requests.get(f"{BASE_URL}/cards/named?fuzzy={name}").json())  # noqa
+    except Exception as e:
+        print(
+            f"ran into error getting scryfall results for name: {name} / {e}",
+        )
         return None
