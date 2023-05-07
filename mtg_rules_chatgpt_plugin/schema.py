@@ -73,6 +73,7 @@ class Card(BaseModel):
     name: str | None
     power: str | None
     scryfall_id: str | None
+    scryfall_uri: str | None
     set_code: str | None
     text: str | None
     toughness: str | None
@@ -91,6 +92,7 @@ class Card(BaseModel):
                 "mana_value": "4",
                 "name": "Damnation",
                 "scryfall_id": "26c68473-70ca-40ba-b5c6-71ec30f88a2c",
+                "scryfall_uri": "https://scryfall.com/card/plc/85/damnation",
                 "set_code": "PLC",
                 "text": "Destroy all creatures. They can’t be regenerated.",
                 "toughness": None,
@@ -100,7 +102,7 @@ class Card(BaseModel):
         }
 
     @classmethod
-    def from_orm(cls, card_orm):
+    def from_orm(cls, card_orm, scryfall_db):
         return cls(
             artist=card_orm.artist,
             colors=card_orm.colors,
@@ -111,6 +113,7 @@ class Card(BaseModel):
             name=card_orm.name,
             power=card_orm.power,
             scryfall_id=card_orm.scryfallId,
+            scryfall_uri=scryfall_db.get_uri(card_orm.scryfallId),
             set_code=card_orm.setCode,
             text=card_orm.text,
             toughness=card_orm.toughness,

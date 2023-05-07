@@ -36,10 +36,14 @@ def get_app() -> FastAPI:
 
 
 # start app
-rules_db, app, start_time = (
+rules_db, app, start_time, scryfall_db = (
     rules.get_rules_db(),
     get_app(),
     config.get_current_datetime(),
+    scryfall.Scryfall(
+        config.get_scryfall_cache_path(),
+        config.get_scryfall_url(),
+    ),
 )
 print(f"Started: {start_time}")
 
@@ -122,38 +126,13 @@ async def query_cards(
 
     cards = await models.database.fetch_all(stmt)
 
-    return [schema.Card.from_orm(card) for card in cards]
-
-
-@app.get(
-    "/cards/{uuid}/scryfall_uri",
-    summary="Get Scryfall URL for a card by UUID.",
-)
-async def get_scryfall_uri(uuid: uuid.UUID):
-    """Accepts a UUID and returns the scryfall_uri for the card."""
-    stmt = models.build_card_query(uuid=str(uuid))
-
-    card = await models.database.fetch_one(stmt)
-
-    if card is None:
-        return None
-
-    # hit api for uri
-    scryfall_uri = scryfall.get_uri(card["scryfallId"])
-
-    if scryfall_uri is None:
-        return None
-
-    # remove utm
-    scryfall_uri = scryfall_uri.split("?")[0]
-
-    return {"scryfall_uri": scryfall_uri}
+    return [schema.Card.from_orm(card, scryfall_db) for card in cards]
 
 
 @app.get("/fuzzy", summary="Get card by fuzzy search on card name.")
 async def get_fuzzy_card_name(card_name: str):
     """Accepts a card name and returns the card with the closest name."""
-    scryfall_card = scryfall.get_card_by_fuzzy_name(card_name)
+    scryfall_card = scryfall_db.get_card_by_fuzzy_name(card_name)
 
     if scryfall_card is None:
         raise HTTPException(status_code=404, detail="Card not found")
@@ -168,7 +147,7 @@ async def get_fuzzy_card_name(card_name: str):
     if card is None:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    return schema.Card.from_orm(card)
+    return schema.Card.from_orm(card, scryfall_db)
 
 
 @app.get("/random", summary="Get a random card")
@@ -181,7 +160,7 @@ async def get_random_card():
     if card is None:
         raise HTTPException(status_code=500, detail="Something went wrong")
 
-    return schema.Card.from_orm(card)
+    return schema.Card.from_orm(card, scryfall_db)
 
 
 @app.get(
@@ -207,7 +186,7 @@ async def get_booster(set_code: str) -> types.CardsResponse:
 
     cards = await models.database.fetch_all(stmt)
 
-    return [schema.Card.from_orm(card) for card in cards]
+    return [schema.Card.from_orm(card, scryfall_db) for card in cards]
 
 
 @app.get("/logo.png")

@@ -30,6 +30,14 @@ def get_rules_vs_path() -> str:
     return os.environ["RULES_VS"]
 
 
+def get_scryfall_url() -> str:
+    return os.environ["SCRYFALL_URL"]
+
+
+def get_scryfall_cache_path() -> str:
+    return os.environ["SCRYFALL_CACHE"]
+
+
 def is_dev_mode() -> bool:
     return get_env() == "LOCAL"
 
