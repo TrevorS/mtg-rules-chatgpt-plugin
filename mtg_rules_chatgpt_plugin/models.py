@@ -1,6 +1,6 @@
 import databases
 import sqlalchemy
-from sqlalchemy import Column, Float, String, select
+from sqlalchemy import Column, Date, Float, Integer, String, select
 
 from . import config
 
@@ -10,6 +10,7 @@ metadata = sqlalchemy.MetaData()
 cards = sqlalchemy.Table(
     "cards",
     metadata,
+    Column("id", Integer, primary_key=True),
     Column("artist", String, nullable=True),
     Column("colors", String, nullable=True),
     Column("keywords", String, nullable=True),
@@ -69,3 +70,27 @@ def build_card_query(
             stmt = stmt.where(getattr(cards.c, column) == value)
 
     return stmt
+
+
+def get_cards_by_uuids(uuids: list[str]) -> select:
+    return select(cards.c).where(cards.c.uuid.in_(uuids))
+
+
+sets = sqlalchemy.Table(
+    "sets",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("baseSetSize", Integer, nullable=True),
+    Column("block", String, nullable=True),
+    Column("booster", String, nullable=True),
+    Column("code", String(8), unique=True, nullable=False),
+    Column("name", String, nullable=True),
+    Column("releaseDate", Date, nullable=True),
+    Column("tokenSetCode", String, nullable=True),
+    Column("totalSetSize", Integer, nullable=True),
+    Column("type", String, nullable=True),
+)
+
+
+def build_set_query(set_code: str):
+    return select(sets.c).where(sets.c.code == set_code)

@@ -74,10 +74,7 @@ def query_rules(q: str) -> types.RulesResponse:
     return [schema.Rule(**result.dict()) for result in results]
 
 
-@app.get(
-    "/cards",
-    summary="Query cards by exact parameters.",
-)
+@app.get("/cards", summary="Query cards by exact parameters.")
 async def query_cards(
     artist: str | None = None,
     colors: str | None = None,
@@ -125,7 +122,7 @@ async def query_cards(
 
     cards = await models.database.fetch_all(stmt)
 
-    return [schema.Card(**dict(card)) for card in cards]
+    return [schema.Card.from_orm(card) for card in cards]
 
 
 @app.get(
@@ -153,10 +150,7 @@ async def get_scryfall_uri(uuid: uuid.UUID):
     return {"scryfall_uri": scryfall_uri}
 
 
-@app.get(
-    "/fuzzy",
-    summary="Get card by fuzzy search on card name.",
-)
+@app.get("/fuzzy", summary="Get card by fuzzy search on card name.")
 async def get_fuzzy_card_name(card_name: str):
     """Accepts a card name and returns the card with the closest name."""
     scryfall_card = scryfall.get_card_by_fuzzy_name(card_name)
@@ -174,13 +168,10 @@ async def get_fuzzy_card_name(card_name: str):
     if card is None:
         raise HTTPException(status_code=404, detail="Card not found")
 
-    return schema.Card(**dict(card))
+    return schema.Card.from_orm(card)
 
 
-@app.get(
-    "/random",
-    summary="Get a random card",
-)
+@app.get("/random", summary="Get a random card")
 async def get_random_card():
     """Returns a random card"""
     stmt = models.get_random_card()
@@ -190,7 +181,33 @@ async def get_random_card():
     if card is None:
         raise HTTPException(status_code=500, detail="Something went wrong")
 
-    return schema.Card(**dict(card))
+    return schema.Card.from_orm(card)
+
+
+@app.get(
+    "/booster/{set_code}",
+    summary="Get a booster pack from a set by set code.",
+)
+async def get_booster(set_code: str) -> types.CardsResponse:
+    stmt = models.build_set_query(set_code=set_code)
+
+    draft_set = await models.database.fetch_one(stmt)
+
+    if draft_set is None:
+        raise HTTPException(status_code=404, detail="Set not found")
+
+    draft_set = schema.DraftSet.from_orm(draft_set)
+
+    if draft_set is None:
+        raise HTTPException(status_code=500, detail="Something went wrong")
+
+    uuids = schema.generate_booster(draft_set)  # type: ignore
+
+    stmt = models.get_cards_by_uuids(uuids)
+
+    cards = await models.database.fetch_all(stmt)
+
+    return [schema.Card.from_orm(card) for card in cards]
 
 
 @app.get("/logo.png")
