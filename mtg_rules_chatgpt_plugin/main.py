@@ -18,8 +18,8 @@ def get_app() -> FastAPI:
     print("Starting api")
 
     app = FastAPI(
-        title="Unofficial Magic: The Gathering ChatGPT Plugin",
-        description="An unofficial plugin for the OpenAI ChatGPT API that provides Magic: The Gathering rules and card information.",  # noqa
+        title="MagiCodex",
+        description="Ask about Magic: The Gathering cards and rules interactions",  # noqa
         version="0.1.0",
     )
 
