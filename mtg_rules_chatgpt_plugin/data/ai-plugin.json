@@ -2,7 +2,7 @@
 	"schema_version": "v1",
 	"name_for_human": "MagiCodex",
 	"name_for_model": "magi_codex",
-	"description_for_human": "Ask about Magic: The Gathering cards and rules interactions",
+	"description_for_human": "Ask about Magic: The Gathering cards, rules and interactions.",
 	"description_for_model": "Find answers to questions about Magic: The Gathering (MTG). Use it whenever a user asks something about MTG rules or cards. When you get results back that have a Scryfall URI, show it to the user.",
 	"auth": {
 		"type": "none"
