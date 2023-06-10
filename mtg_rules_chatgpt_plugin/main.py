@@ -19,7 +19,7 @@ def get_app() -> FastAPI:
 
     app = FastAPI(
         title="MagiCodex",
-        description="Ask about Magic: The Gathering cards and rules interactions",  # noqa
+        description="Ask about Magic: The Gathering cards, rules and interactions.",  # noqa
         version="0.1.0",
     )
 
